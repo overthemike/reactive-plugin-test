@@ -147,6 +147,12 @@ export const createReactivePlugin = (): ValtioPlugin => {
     computed: <T extends object>(obj: {
       [K in keyof T]: () => T[K];
     }): T => {
+      // commenting out and trying with native valtio proxy
+      // if (!proxyFactory) {
+      //   throw new Error('Proxy factory not available. Make sure plugin is attached.')
+      // }
+      // const computedState = proxyFactory<T>({})
+      
       const computedState = proxy({}) as T
       for (const key in obj) {
         // Set up watcher for each computed property
