@@ -1,4 +1,5 @@
 import type { ValtioPlugin, ProxyFactory } from 'valtio-plugin'
+import { proxy } from 'valtio'
 
 // Simple reactive plugin implementation
 export const createReactivePlugin = (): ValtioPlugin => {
@@ -146,11 +147,7 @@ export const createReactivePlugin = (): ValtioPlugin => {
     computed: <T extends object>(obj: {
       [K in keyof T]: () => T[K];
     }): T => {
-      if (!proxyFactory) {
-        throw new Error('Proxy factory not available. Make sure plugin is attached.')
-      }
-      
-      const computedState = proxyFactory({}) as T
+      const computedState = proxy({}) as T
       for (const key in obj) {
         // Set up watcher for each computed property
         const computeFn = obj[key]
