@@ -48,32 +48,10 @@ export const createReactivePlugin = (): ValtioPlugin => {
         if (watcher.dependencies.has(pathKey) && !watcher.isRunning) {
           if (isBatching) {
             // Queue callback for later execution
-            batchCallbacks.add(() => {
-              if (!watcher.isRunning) {
-                watcher.isRunning = true
-                currentWatcher = id
-                try {
-                  watcher.callback()
-                } catch (e) {
-                  console.error('Error in reactive watcher:', e)
-                } finally {
-                  watcher.isRunning = false
-                  currentWatcher = null
-                }
-              }
-            })
+            batchCallbacks.add(watcher.callback)
           } else {
             // Execute immediately
-            watcher.isRunning = true
-            currentWatcher = id
-            try {
-              watcher.callback()
-            } catch (e) {
-              console.error('Error in reactive watcher:', e)
-            } finally {
-              watcher.isRunning = false
-              currentWatcher = null
-            }
+            watcher.callback()
           }
         }
       }
@@ -86,7 +64,22 @@ export const createReactivePlugin = (): ValtioPlugin => {
       const watcher = {
         fn,
         dependencies: new Set<string>(),
-        callback: callback || fn,
+        callback: () => {
+          if (!watcher.isRunning) {
+            watcher.isRunning = true
+            // Clear dependencies before re-running to capture new ones
+            watcher.dependencies.clear()
+            currentWatcher = id
+            try {
+              (callback || fn)()
+            } catch (e) {
+              console.error('Error in reactive watcher:', e)
+            } finally {
+              watcher.isRunning = false
+              currentWatcher = null
+            }
+          }
+        },
         isRunning: false
       }
 
@@ -169,6 +162,8 @@ export const createReactivePlugin = (): ValtioPlugin => {
           callback: () => {
             if (!watcher.isRunning) {
               watcher.isRunning = true
+              // Clear dependencies before recalculating to capture new ones
+              watcher.dependencies.clear()
               currentWatcher = id
               try {
                 computedState[key] = computeFn()
@@ -208,6 +203,8 @@ export const createReactivePlugin = (): ValtioPlugin => {
         callback: () => {
           if (!watcher.isRunning) {
             watcher.isRunning = true
+            // Clear dependencies before re-running to capture new ones
+            watcher.dependencies.clear()
             currentWatcher = id
             try {
               fn()

@@ -19,6 +19,7 @@ const computedValues = computed({
 
 function App() {
   const snap = useSnapshot(state)
+  const computedSnap = useSnapshot(computedValues)
 
   useEffect(() => {
     // Set up watchers inside useEffect
@@ -57,7 +58,11 @@ function App() {
   return (
     <div>
       <h1>Reactive System Demo</h1>
+      <input type='number' onChange={(e) => state.multiplier = Number(e.target.value)} value={snap.multiplier} />
       <p>Count: {snap.count}</p>
+      <p>Count *2: {computedSnap.doubled}</p>
+      <p>Count *4: {computedSnap.quadrupled}</p>
+      <p>Count * multiplier: {computedSnap.multiplied}</p>
     </div>
   )
 }
